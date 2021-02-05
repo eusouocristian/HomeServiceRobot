@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+	<node name="slam_gmapping" pkg="gmapping" type="slam_gmapping" respawn="false" output="screen">
+  		<remap from="sensor_msgs/LaserScan" to="/scan"/>
+  	    <remap from="nav_msgs/OccupancyGrid" to="/map"/> 
+  	    
+  	    <param name ="base_frame" value="robot_footprint" />
+	</node>
+	
+  
+</launch>
