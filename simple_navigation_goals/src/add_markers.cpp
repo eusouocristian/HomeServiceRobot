@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include "std_msgs/String.h"
+#include "std_msgs/Bool.h"
 #include "simple_navigation_goals/pose.h"
 #include <nav_msgs/Odometry.h>
 #include <string>
@@ -8,9 +9,11 @@
 visualization_msgs::Marker marker;
 float goal1[3];
 float goal2[3];
-bool pick = false;
+bool picked = false;
 bool dropped_off = false;
 bool destination_received = false;
+
+
 
 void marker_st_changed(const std_msgs::String::ConstPtr& msg)
 {
@@ -22,7 +25,7 @@ void marker_st_changed(const std_msgs::String::ConstPtr& msg)
   std::string dropoff_string = "dropoff";
   
   if (package_status == pickup_string) 
-  	pick = true;
+  	picked = true;
   if (package_status == dropoff_string) 
   	dropped_off = true;
 }
@@ -47,6 +50,7 @@ int main( int argc, char** argv )
   ros::NodeHandle n;
   ros::Rate r(1);
   ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  ros::Publisher marker_placed_pub = n.advertise<std_msgs::Bool>("marker_placed", 1);
   ros::Subscriber marker_st_sub = n.subscribe("marker_status", 10, marker_st_changed);
   ros::Subscriber marker_destination_sub = n.subscribe("marker_destination_pose", 10, marker_destination_pose);  
   
@@ -70,9 +74,11 @@ int main( int argc, char** argv )
 
     // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
     marker.action = visualization_msgs::Marker::ADD;
-
+	
 	//Wait untill receiving the first destination information
     while(destination_received==false) {
+    	ROS_INFO("Waiting for destination to place the object");
+    	sleep(1);
 		ros::spinOnce();
 	}
     
@@ -109,24 +115,25 @@ int main( int argc, char** argv )
       ROS_WARN_ONCE("Please create a subscriber to the marker");
       sleep(1);
     } 
+    
+    //publish the marker in Rviz
     marker_pub.publish(marker);
+    
+    // Publish the information that the object is placed
+    // pick_objects.cpp will only send the navigation goal when the object is placed. 
+    std_msgs::Bool marker_published;
+    marker_published.data = true;
+    marker_placed_pub.publish(marker_published);
 
 	//Wait untill the robot reaches the first goal position
-	while(pick==false) {
+	while(picked==false) {
 		ros::spinOnce();
 	}
 	
 	// When the robot reaches the fist goal, delete the marker and publish it on the second position goal
-	if (pick == true) {
-		ros::Duration(2.0).sleep();
+	if (picked == true) {
+		ros::Duration(1.0).sleep();
     	marker.action = visualization_msgs::Marker::DELETE;
-    	marker_pub.publish(marker);
-    	
-    	marker.pose.position.x = goal2[0];
-		marker.pose.position.y = goal2[1];
-		marker.pose.position.z = 0.1;
-		marker.pose.orientation.w = goal2[2];
-    	marker.action = visualization_msgs::Marker::ADD;
     	marker_pub.publish(marker);
 	}
 
@@ -136,10 +143,14 @@ int main( int argc, char** argv )
 		ros::spinOnce();
 	}
 	
-	//DELETE the marker from Rviz
+	//DELETE the marker from Rviz when the robot reached the goal2
 	if (dropped_off == true) {
-		ros::Duration(2.0).sleep();
-    	marker.action = visualization_msgs::Marker::DELETE;
+		ros::Duration(1.0).sleep();
+    	marker.pose.position.x = goal2[0];
+		marker.pose.position.y = goal2[1];
+		marker.pose.position.z = 0.1;
+		marker.pose.orientation.w = goal2[2];
+    	marker.action = visualization_msgs::Marker::ADD;
     	marker_pub.publish(marker);
 	}
 

@@ -1,4 +1,0 @@
-gzserver src/pgm_map_creator/world/<YOUR GAZEBO WORLD FILE>
-
-other terminal:
-roslaunch pgm_map_creator request_publisher.launch

@@ -3,7 +3,7 @@
 <launch>
               
   <!--launch rviz-->
-  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find my_robot)/launch/rviz_config.rviz"/> 
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find rvizConfig)/rviz_config.rviz"/> 
 
   
 </launch>

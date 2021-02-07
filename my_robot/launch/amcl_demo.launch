@@ -1,6 +1,6 @@
 <launch>
 
-	<arg name="map_file" default="$(find my_robot)/maps/map.yaml"/>
+	<arg name="map_file" default="$(find map)/map.yaml"/>
 	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
 	<node name="amcl" type="amcl" pkg="amcl" output="screen">
